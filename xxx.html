@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>三线摆实验｜cm单位 + 总时间平均 / 周期数</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs2@0.0.2/qrcode.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: system-ui, 'Segoe UI', 'Noto Sans', 'Helvetica Neue', sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+            padding: 20px 16px 40px;
+            color: #0f172a;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 28px;
+            padding: 20px 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.03);
+        }
+
+        .card-header {
+            font-size: 1.35rem;
+            font-weight: 650;
+            margin-bottom: 18px;
+            padding-bottom: 8px;
+            border-bottom: 3px solid #3b82f6;
+            display: inline-block;
+            letter-spacing: -0.2px;
+            color: #1e293b;
+        }
+
+        .sub-header {
+            font-weight: 600;
+            margin: 18px 0 10px 0;
+            color: #2c3e66;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .input-group label {
+            width: 150px;
+            font-weight: 500;
+            color: #334155;
+            font-size: 0.9rem;
+        }
+
+        .input-field {
+            flex: 1;
+            min-width: 160px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            background: #fefefe;
+            transition: 0.2s;
+            font-family: monospace;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+
+        .readonly-value {
+            background: #f1f5f9;
+            padding: 12px 14px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #1e40af;
+            border: 1px solid #cbd5e1;
+        }
+
+        .edge-grid, .time-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 12px 0 8px;
+        }
+
+        .measure-card {
+            background: #f9fbfe;
+            border-radius: 24px;
+            padding: 12px 12px 14px;
+            border: 1px solid #e2edff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .measure-card label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+            color: #475569;
+        }
+
+        .measure-card input {
+            padding: 10px 8px;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+
+        .avg-badge {
+            background: #eef2ff;
+            border-radius: 28px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 12px;
+            text-align: center;
+            color: #1e3a8a;
+        }
+
+        .row-buttons {
+            display: flex;
+            gap: 12px;
+            margin: 20px 0 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #3b82f6;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 1rem;
+            color: white;
+            cursor: pointer;
+            flex: 1;
+            transition: 0.15s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        button.reset-btn {
+            background: #64748b;
+        }
+
+        button:hover {
+            opacity: 0.92;
+            transform: scale(0.98);
+        }
+
+        .result-area {
+            background: #f8fafc;
+            border-radius: 24px;
+            padding: 18px;
+            margin-top: 20px;
+            border-left: 5px solid #3b82f6;
+        }
+
+        .formula-detail {
+            background: #ffffffdd;
+            padding: 12px;
+            border-radius: 18px;
+            font-size: 0.82rem;
+            font-family: monospace;
+            word-break: break-word;
+            margin-bottom: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .final-value {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #1e40af;
+            margin-top: 8px;
+            background: #eef2ff;
+            padding: 10px 14px;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .warning {
+            background: #fff7ed;
+            border-left: 4px solid #f97316;
+            padding: 10px 14px;
+            border-radius: 18px;
+            font-size: 0.75rem;
+            margin-top: 12px;
+        }
+
+        hr {
+            margin: 16px 0;
+            border: none;
+            border-top: 2px dashed #cbd5e1;
+        }
+
+        .qrcode-section {
+            text-align: center;
+            background: white;
+            border-radius: 28px;
+            padding: 20px;
+            margin-top: 10px;
+        }
+
+        .note {
+            font-size: 0.7rem;
+            color: #475569;
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        .unit-hint {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-left: 8px;
+        }
+        @media (max-width: 650px) {
+            .input-group label {
+                width: 100%;
+                margin-bottom: 4px;
+            }
+            .time-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div style="text-align: center; margin-bottom: 12px;">
+        <h2 style="margin: 0; color: #0f172a;">⚡ 三线摆 · 转动惯量实验仪</h2>
+        <p style="margin: 6px 0 0; color: #475569;">长度单位 cm | 先平均总时间，再除以周期数 → 平均周期 | 结果 kg·m²</p>
+    </div>
+
+    <!-- ========= 几何参数：上边长a（五组cm）、下边长b（五组cm）、垂直距离H（cm）、重力加速度 ========= -->
+    <div class="card">
+        <div class="card-header">📐 几何参数（单位：cm，自动换算为米）</div>
+        
+        <div class="sub-header">🔺 上盘悬点边长 a (cm，等边三角形边长)</div>
+        <div class="edge-grid" id="edgeUpperGrid"></div>
+        <div id="avgA_Display" class="avg-badge">📏 平均边长 a_avg = -- cm</div>
+        
+        <div class="sub-header">🔻 下盘悬点边长 b (cm，等边三角形边长)</div>
+        <div class="edge-grid" id="edgeLowerGrid"></div>
+        <div id="avgB_Display" class="avg-badge">📏 平均边长 b_avg = -- cm</div>
+        
+        <div class="input-group" style="margin-top: 8px;">
+            <label>⬇️ 上下盘垂直距离 H (cm) :</label>
+            <div class="input-field">
+                <input type="number" id="height_H_cm" step="any" placeholder="例: 35.0">
+            </div>
+        </div>
+        <div class="input-group">
+            <label>🌍 重力加速度 g (m/s²) :</label>
+            <div class="input-field">
+                <input type="number" id="gravity_g" step="any" placeholder="9.80">
+            </div>
+        </div>
+        <div class="warning">
+            💡 几何原理：半径 r = a_avg / √3 (米), R = b_avg / √3 (米)。<br>
+            ⚠️ 所有长度输入为 cm，计算时自动转换为米 (除以100)。最终转动惯量单位 kg·m²。
+        </div>
+    </div>
+
+    <!-- ========= 空盘（下圆盘）质量 + 公共周期数 + 五组总时间 ========= -->
+    <div class="card">
+        <div class="card-header">🟤 空盘测量数据</div>
+        <div class="input-group">
+            <label>⚖️ 空盘质量 m₀ (kg) :</label>
+            <div class="input-field">
+                <input type="number" id="mass0" step="any" placeholder="例: 0.800">
+            </div>
+        </div>
+        <div class="input-group">
+            <label>🔁 空盘摆动周期数 N₀ (次数) :</label>
+            <div class="input-field">
+                <input type="number" id="periodCount0" step="1" placeholder="例: 30">
+                <div class="unit-hint">公共周期数（每次测量摆动相同的次数）</div>
+            </div>
+        </div>
+        <div class="sub-header">⏱️ 五组摆动总时间 (秒)</div>
+        <div class="time-grid" id="time0Grid"></div>
+        <div id="avgPeriod0Display" class="avg-badge">⏲️ 平均周期 T₀_avg = -- s</div>
+    </div>
+
+    <!-- ========= 待测物体（放置于下圆盘）质量 + 公共周期数 + 五组总时间 ========= -->
+    <div class="card">
+        <div class="card-header">🧪 待测物体测量数据</div>
+        <div class="input-group">
+            <label>📦 物体质量 m_obj (kg) :</label>
+            <div class="input-field">
+                <input type="number" id="mass_obj" step="any" placeholder="例: 0.400">
+            </div>
+        </div>
+        <div class="input-group">
+            <label>🔁 负载摆动周期数 N₁ (次数) :</label>
+            <div class="input-field">
+                <input type="number" id="periodCount1" step="1" placeholder="例: 30">
+                <div class="unit-hint">公共周期数（每次测量摆动相同的次数）</div>
+            </div>
+        </div>
+        <div class="sub-header">⏱️ 五组摆动总时间 (秒)</div>
+        <div class="time-grid" id="time1Grid"></div>
+        <div id="avgPeriod1Display" class="avg-badge">⏲️ 平均周期 T₁_avg = -- s</div>
+    </div>
+
+    <!-- 按钮组 -->
+    <div class="row-buttons">
+        <button id="calcBtn">📐 计算转动惯量</button>
+        <button id="resetBtn" class="reset-btn">⟳ 清空所有数据</button>
+    </div>
+
+    <!-- 详细结果展示区 -->
+    <div class="card" style="background: #fef9e3;">
+        <div class="card-header" style="border-bottom-color: #f97316;">📊 详细计算步骤 & 最终结果</div>
+        <div id="resultContainer">
+            <div style="text-align: center; color: #64748b; padding: 20px;">请输入所有实验数据后点击「计算转动惯量」</div>
+        </div>
+    </div>
+
+    <!-- 二维码区域 -->
+    <div class="qrcode-section">
+        <div class="qrcode-title" style="font-weight: 600;">📱 手机扫码使用本计算器</div>
+        <div id="qrcode"></div>
+        <div class="note">
+            ⚡ 边长单位cm，自动转米；周期数只需填一次，先计算五组总时间的平均值，再除以周期数得到平均周期。<br>
+            所有输入框初始为空，请按实验记录填写。
+        </div>
+        <div id="urlHint" style="font-size: 0.7rem; word-break: break-all; margin-top: 6px;"></div>
+    </div>
+</div>
+
+<script>
+    // 常量 √3
+    const SQRT3 = Math.sqrt(3);
+    // cm 转 m 因子
+    const CM_TO_M = 0.01;
+
+    // DOM 元素
+    const heightHCmInput = document.getElementById('height_H_cm');
+    const gravityGInput = document.getElementById('gravity_g');
+    const mass0Input = document.getElementById('mass0');
+    const massObjInput = document.getElementById('mass_obj');
+    const periodCount0Input = document.getElementById('periodCount0');
+    const periodCount1Input = document.getElementById('periodCount1');
+
+    // 容器
+    const edgeUpperGrid = document.getElementById('edgeUpperGrid');
+    const edgeLowerGrid = document.getElementById('edgeLowerGrid');
+    const time0Grid = document.getElementById('time0Grid');
+    const time1Grid = document.getElementById('time1Grid');
+
+    // 存储动态输入框
+    let aInputs = [];      // 上边长 cm
+    let bInputs = [];      // 下边长 cm
+    let time0Inputs = [];  // 空盘五组总时间 (秒)
+    let time1Inputs = [];  // 负载五组总时间 (秒)
+
+    // 显示平均值的元素
+    const avgADisplay = document.getElementById('avgA_Display');
+    const avgBDisplay = document.getElementById('avgB_Display');
+    const avgPeriod0Display = document.getElementById('avgPeriod0Display');
+    const avgPeriod1Display = document.getElementById('avgPeriod1Display');
+
+    // ================= 创建边长输入组 (五组，单位cm) =================
+    function createEdgeGrid(container, prefix, count = 5) {
+        container.innerHTML = '';
+        const inputs = [];
+        for (let i = 1; i <= count; i++) {
+            const div = document.createElement('div');
+            div.className = 'measure-card';
+            div.innerHTML = `
+                <label>${prefix}${i} (cm)</label>
+                <input type="number" id="${prefix}_${i}" step="any" placeholder="边长 (cm)">
+            `;
+            container.appendChild(div);
+            const input = div.querySelector('input');
+            input.value = '';
+            inputs.push(input);
+        }
+        return inputs;
+    }
+
+    // 创建总时间输入组 (五组，秒)
+    function createTimeGrid(container, baseName, count = 5) {
+        container.innerHTML = '';
+        const inputs = [];
+        for (let i = 1; i <= count; i++) {
+            const card = document.createElement('div');
+            card.className = 'measure-card';
+            card.innerHTML = `
+                <label>📊 第 ${i} 组总时间 t (s)</label>
+                <input type="number" id="${baseName}_t${i}" step="any" placeholder="总时间 (秒)">
+            `;
+            container.appendChild(card);
+            const timeInput = card.querySelector(`#${baseName}_t${i}`);
+            timeInput.addEventListener('input', updateAllAverages);
+            inputs.push(timeInput);
+        }
+        return inputs;
+    }
+
+    // 初始化所有输入组件
+    function initAllInputs() {
+        aInputs = createEdgeGrid(edgeUpperGrid, 'a', 5);
+        bInputs = createEdgeGrid(edgeLowerGrid, 'b', 5);
+        time0Inputs = createTimeGrid(time0Grid, 'empty', 5);
+        time1Inputs = createTimeGrid(time1Grid, 'load', 5);
+        
+        // 绑定边长输入事件
+        aInputs.forEach(inp => inp.addEventListener('input', updateAllAverages));
+        bInputs.forEach(inp => inp.addEventListener('input', updateAllAverages));
+        // 周期数变化时，也要重新计算周期平均
+        periodCount0Input.addEventListener('input', updateAllAverages);
+        periodCount1Input.addEventListener('input', updateAllAverages);
+        
+        updateAllAverages();
+    }
+
+    // 从一组边长输入获取有效值数组 (单位cm)
+    function getValidValuesFromInputs(inputsArray) {
+        let vals = [];
+        for (let inp of inputsArray) {
+            let v = parseFloat(inp.value);
+            if (!isNaN(v) && v > 0) vals.push(v);
+        }
+        return vals;
+    }
+
+    // 计算边长平均值 (cm)
+    function computeEdgeAverage(inputsArray) {
+        const valid = getValidValuesFromInputs(inputsArray);
+        if (valid.length === 0) return null;
+        return valid.reduce((a,b) => a+b, 0) / valid.length;
+    }
+
+    // 新逻辑：计算五组总时间的平均值，然后除以周期数得到平均周期
+    function computeAveragePeriodFromTotalTimes(timeInputsArray, periodCountElem) {
+        let N = parseFloat(periodCountElem.value);
+        if (isNaN(N) || N <= 0) return null;
+        let validTimes = [];
+        for (let inp of timeInputsArray) {
+            let t = parseFloat(inp.value);
+            if (!isNaN(t) && t > 0) {
+                validTimes.push(t);
+            }
+        }
+        if (validTimes.length === 0) return null;
+        const avgTime = validTimes.reduce((a,b) => a+b, 0) / validTimes.length;
+        return avgTime / N;
+    }
+
+    // 获取五组总时间的平均值（用于展示）
+    function getAverageTotalTime(timeInputsArray) {
+        let validTimes = [];
+        for (let inp of timeInputsArray) {
+            let t = parseFloat(inp.value);
+            if (!isNaN(t) && t > 0) validTimes.push(t);
+        }
+        if (validTimes.length === 0) return null;
+        return validTimes.reduce((a,b) => a+b, 0) / validTimes.length;
+    }
+
+    // 获取所有有效总时间原始值（用于展示）
+    function getRawTotalTimes(timeInputsArray) {
+        let times = [];
+        for (let inp of timeInputsArray) {
+            let t = parseFloat(inp.value);
+            if (!isNaN(t) && t > 0) times.push(t);
+        }
+        return times;
+    }
+
+    // 更新所有平均值显示（边长平均、周期平均）
+    function updateAllAverages() {
+        // 边长平均 (cm)
+        let a_avg_cm = computeEdgeAverage(aInputs);
+        avgADisplay.innerHTML = a_avg_cm !== null ? `📏 平均边长 a_avg = ${a_avg_cm.toFixed(4)} cm` : '📏 平均边长 a_avg = -- cm (至少输入一组边长)';
+        let b_avg_cm = computeEdgeAverage(bInputs);
+        avgBDisplay.innerHTML = b_avg_cm !== null ? `📏 平均边长 b_avg = ${b_avg_cm.toFixed(4)} cm` : '📏 平均边长 b_avg = -- cm (至少输入一组边长)';
+        
+        // 空盘周期显示
+        let T0_avg = computeAveragePeriodFromTotalTimes(time0Inputs, periodCount0Input);
+        let avgTime0 = getAverageTotalTime(time0Inputs);
+        let N0 = parseFloat(periodCount0Input.value);
+        if (T0_avg !== null && avgTime0 !== null && !isNaN(N0) && N0 > 0) {
+            avgPeriod0Display.innerHTML = `⏲️ 平均总时间 = ${avgTime0.toFixed(6)} s，周期数 N₀ = ${N0} → 平均周期 T₀_avg = ${T0_avg.toFixed(6)} s`;
+        } else {
+            avgPeriod0Display.innerHTML = `⏲️ 平均周期 T₀_avg = -- s (需周期数>0 及至少一组总时间)`;
+        }
+        
+        // 负载周期显示
+        let T1_avg = computeAveragePeriodFromTotalTimes(time1Inputs, periodCount1Input);
+        let avgTime1 = getAverageTotalTime(time1Inputs);
+        let N1 = parseFloat(periodCount1Input.value);
+        if (T1_avg !== null && avgTime1 !== null && !isNaN(N1) && N1 > 0) {
+            avgPeriod1Display.innerHTML = `⏲️ 平均总时间 = ${avgTime1.toFixed(6)} s，周期数 N₁ = ${N1} → 平均周期 T₁_avg = ${T1_avg.toFixed(6)} s`;
+        } else {
+            avgPeriod1Display.innerHTML = `⏲️ 平均周期 T₁_avg = -- s (需周期数>0 及至少一组总时间)`;
+        }
+    }
+
+    // 获取几何参数（边长 cm → 米，半径自动计算）
+    function getGeometryInMeters() {
+        let a_avg_cm = computeEdgeAverage(aInputs);
+        let b_avg_cm = computeEdgeAverage(bInputs);
+        let H_cm = parseFloat(heightHCmInput.value);
+        let g = parseFloat(gravityGInput.value);
+        
+        // 转换为米
+        let a_m = (a_avg_cm !== null && a_avg_cm > 0) ? a_avg_cm * CM_TO_M : null;
+        let b_m = (b_avg_cm !== null && b_avg_cm > 0) ? b_avg_cm * CM_TO_M : null;
+        let H_m = (!isNaN(H_cm) && H_cm > 0) ? H_cm * CM_TO_M : null;
+        
+        let r = (a_m !== null && a_m > 0) ? a_m / SQRT3 : null;
+        let R = (b_m !== null && b_m > 0) ? b_m / SQRT3 : null;
+        
+        if (g <= 0 || isNaN(g)) g = null;
+        return { r, R, H: H_m, g, a_avg_cm, b_avg_cm, H_cm };
+    }
+
+    // 核心转动惯量公式
+    function computeInertia(m, g, R, r, H, T) {
+        if (m <= 0 || g <= 0 || R <= 0 || r <= 0 || H <= 0 || T <= 0) return null;
+        const numerator = m * g * R * r * T * T;
+        const denominator = 4 * Math.PI * Math.PI * H;
+        return numerator / denominator;
+    }
+
+    // 格式化数字
+    function formatNumber(num, digits = 6) {
+        if (num === null || isNaN(num)) return '无效';
+        if (Math.abs(num) < 1e-7) return "0";
+        if (Math.abs(num) < 1e-4) return num.toExponential(5);
+        return num.toFixed(digits).replace(/\.?0+$/, '');
+    }
+
+    // 生成详细步骤HTML
+    function generateDetailSteps(m, g, R, r, H, T, label, extraNote = "") {
+        if (m <= 0 || g <= 0 || R <= 0 || r <= 0 || H <= 0 || T <= 0) return null;
+        const T2 = T * T;
+        const numeratorRaw = m * g * R * r * T2;
+        const denominatorRaw = 4 * Math.PI * Math.PI * H;
+        const inertia = numeratorRaw / denominatorRaw;
+        return `
+            <div class="formula-detail">
+                📐 <strong>${label}</strong> : I = (m·g·R·r·T²) / (4π²·H)<br>
+                🔢 代入数值:<br>
+                &nbsp;&nbsp;m = ${formatNumber(m)} kg &nbsp;| g = ${formatNumber(g)} m/s²<br>
+                &nbsp;&nbsp;R = ${formatNumber(R)} m &nbsp;| r = ${formatNumber(r)} m &nbsp;| H = ${formatNumber(H)} m<br>
+                &nbsp;&nbsp;T = ${formatNumber(T)} s &nbsp;→ T² = ${formatNumber(T2)}<br>
+                🧮 分子 = ${formatNumber(m,4)} × ${formatNumber(g,4)} × ${formatNumber(R,4)} × ${formatNumber(r,4)} × ${formatNumber(T2)} = <strong>${formatNumber(numeratorRaw)}</strong><br>
+                🧮 分母 4π²·H = 4 × (π≈${Math.PI.toFixed(5)})² × ${formatNumber(H)} = ${formatNumber(denominatorRaw)}<br>
+                ⚖️ 最终 ${label} = <strong>${formatNumber(inertia)} kg·m²</strong>
+                ${extraNote ? `<div class="note" style="margin-top:6px;">${extraNote}</div>` : ''}
+            </div>
+            <div class="final-value">
+                ✨ ${label} = ${formatNumber(inertia)} kg·m²
+            </div>
+        `;
+    }
+
+    // 主计算逻辑
+    function performCalculation() {
+        // 1. 获取几何参数（米制）
+        const { r, R, H, g, a_avg_cm, b_avg_cm, H_cm } = getGeometryInMeters();
+        if (r === null || R === null) {
+            resultContainer.innerHTML = `<div class="warning">❌ 边长数据无效：请至少输入一组上边长a和下边长b（cm，正数）来计算半径。</div>`;
+            return;
+        }
+        if (H === null) {
+            resultContainer.innerHTML = `<div class="warning">❌ 垂直距离 H 未填写或 ≤0 (cm)，请输入有效值。</div>`;
+            return;
+        }
+        if (g === null) {
+            resultContainer.innerHTML = `<div class="warning">❌ 重力加速度 g 未填写或 ≤0，请输入当地重力加速度（通常9.80）。</div>`;
+            return;
+        }
+        
+        // 2. 空盘数据
+        let m0 = parseFloat(mass0Input.value);
+        let T0_avg = computeAveragePeriodFromTotalTimes(time0Inputs, periodCount0Input);
+        let avgTime0 = getAverageTotalTime(time0Inputs);
+        let N0 = parseFloat(periodCount0Input.value);
+        if (isNaN(m0) || m0 <= 0) {
+            resultContainer.innerHTML = `<div class="warning">⚠️ 空盘质量 m₀ 未填写或无效（需 >0）。</div>`;
+            return;
+        }
+        if (T0_avg === null || T0_avg <= 0) {
+            resultContainer.innerHTML = `<div class="warning">⚠️ 空盘周期计算无效：请填写公共周期数 N₀ (>0) 及至少一组有效总时间。</div>`;
+            return;
+        }
+        
+        // 3. 负载数据
+        let m_obj = parseFloat(massObjInput.value);
+        let T1_avg = computeAveragePeriodFromTotalTimes(time1Inputs, periodCount1Input);
+        let avgTime1 = getAverageTotalTime(time1Inputs);
+        let N1 = parseFloat(periodCount1Input.value);
+        let hasLoad = (!isNaN(m_obj) && m_obj > 0 && T1_avg !== null && T1_avg > 0);
+        
+        // 构建输出，包含原始cm数据
+        let htmlOutput = `<div style="margin-bottom: 12px; background:#e6f0ff; padding:8px 12px; border-radius:20px;">
+                            📐 边长平均值: a_avg = ${formatNumber(a_avg_cm, 4)} cm → 半径 r = ${formatNumber(r)} m<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; b_avg = ${formatNumber(b_avg_cm, 4)} cm → 半径 R = ${formatNumber(R)} m<br>
+                            📏 垂直距离 H = ${formatNumber(H_cm, 4)} cm = ${formatNumber(H)} m
+                          </div>`;
+        
+        // 空盘数据详细
+        const rawTimes0 = getRawTotalTimes(time0Inputs);
+        htmlOutput += `<div class="formula-detail" style="background:#f1f5f9;">
+                        🔁 空盘周期数 N₀ = ${isNaN(N0) ? '?' : N0}<br>
+                        📊 空盘五组总时间(s): ${rawTimes0.length ? rawTimes0.map(t => t.toFixed(4)).join(' , ') : '无有效数据'}<br>
+                        📊 平均总时间 = ${avgTime0 !== null ? avgTime0.toFixed(6) : '无效'} s<br>
+                        📊 平均周期 T₀ = 平均总时间 / N₀ = ${avgTime0 !== null && !isNaN(N0) && N0>0 ? (avgTime0/N0).toFixed(6) : '无效'} s
+                       </div>`;
+        
+        // 计算空盘惯量 I₀
+        const emptyStep = generateDetailSteps(m0, g, R, r, H, T0_avg, "空盘转动惯量 I₀");
+        if (emptyStep) {
+            htmlOutput += emptyStep;
+        } else {
+            htmlOutput += `<div class="warning">空盘惯量计算失败，请检查参数。</div>`;
+        }
+        
+        let I0_val = computeInertia(m0, g, R, r, H, T0_avg);
+        
+        // 处理负载情况
+        if (hasLoad) {
+            const totalMass = m0 + m_obj;
+            const rawTimes1 = getRawTotalTimes(time1Inputs);
+            htmlOutput += `<hr><div class="formula-detail" style="background:#f1f5f9;">
+                            🔁 负载周期数 N₁ = ${isNaN(N1) ? '?' : N1}<br>
+                            📊 负载五组总时间(s): ${rawTimes1.length ? rawTimes1.map(t => t.toFixed(4)).join(' , ') : '无有效数据'}<br>
+                            📊 平均总时间 = ${avgTime1 !== null ? avgTime1.toFixed(6) : '无效'} s<br>
+                            📊 平均周期 T₁ = 平均总时间 / N₁ = ${avgTime1 !== null && !isNaN(N1) && N1>0 ? (avgTime1/N1).toFixed(6) : '无效'} s<br>
+                            📦 总质量 m_total = ${formatNumber(m0)} + ${formatNumber(m_obj)} = ${formatNumber(totalMass)} kg
+                           </div>`;
+            const totalStep = generateDetailSteps(totalMass, g, R, r, H, T1_avg, "总转动惯量 I_total (盘+物体)");
+            if (totalStep) {
+                htmlOutput += totalStep;
+                let I_total_val = computeInertia(totalMass, g, R, r, H, T1_avg);
+                if (I0_val !== null && I_total_val !== null) {
+                    let I_obj = I_total_val - I0_val;
+                    htmlOutput += `
+                        <div class="result-area" style="background: #ecfdf5; border-left-color: #10b981; margin-top: 16px;">
+                            <div class="result-title">🎯 待测物体转动惯量 (实验净惯量)</div>
+                            <div class="formula-detail">
+                                <strong>I_obj = I_total − I₀</strong><br>
+                                I_total = ${formatNumber(I_total_val)} kg·m² &nbsp;&nbsp; I₀ = ${formatNumber(I0_val)} kg·m²<br>
+                                ➕ 代入计算: I_obj = ${formatNumber(I_total_val)} − ${formatNumber(I0_val)} = <strong style="font-size:1.2rem;">${formatNumber(I_obj)} kg·m²</strong>
+                            </div>
+                            <div class="final-value" style="background:#a7f3d0; color:#065f46;">
+                                📌 物体转动惯量 I_obj = ${formatNumber(I_obj)} kg·m²
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    htmlOutput += `<div class="warning">无法计算净惯量（空盘或总惯量数值异常）。</div>`;
+                }
+            } else {
+                htmlOutput += `<div class="warning">负载转动惯量计算失败，请检查负载周期或总质量。</div>`;
+            }
+        } else {
+            if (!isNaN(m_obj) && m_obj > 0 && (T1_avg === null || T1_avg <= 0)) {
+                htmlOutput += `<div class="warning">⚠️ 物体质量已填写 (${m_obj} kg)，但负载周期无效（请填写公共周期数N₁及至少一组总时间），无法计算物体转动惯量。</div>`;
+            } else if ((isNaN(m_obj) || m_obj <= 0) && T1_avg !== null && T1_avg > 0) {
+                htmlOutput += `<div class="warning">⚠️ 负载周期有效，但物体质量未填写或 ≤0，无法获得净物体惯量（需提供正质量）。</div>`;
+            } else {
+                htmlOutput += `<hr><div class="note" style="text-align:center;">💡 未提供有效负载数据（正质量+有效周期），仅展示空盘转动惯量结果。</div>`;
+            }
+        }
+        
+        resultContainer.innerHTML = htmlOutput;
+    }
+    
+    // 清空所有输入框
+    function resetAllFields() {
+        // 清空边长
+        [...aInputs, ...bInputs].forEach(inp => { inp.value = ''; });
+        // 清空总时间输入
+        [...time0Inputs, ...time1Inputs].forEach(inp => { inp.value = ''; });
+        // 清空其他输入
+        heightHCmInput.value = '';
+        gravityGInput.value = '';
+        mass0Input.value = '';
+        massObjInput.value = '';
+        periodCount0Input.value = '';
+        periodCount1Input.value = '';
+        updateAllAverages();
+        resultContainer.innerHTML = `<div style="text-align: center; color: #64748b; padding: 20px;">所有数据已清空，请填写实验数据后计算。</div>`;
+    }
+    
+    // 二维码生成
+    function generateQRCode() {
+        const qrcodeDiv = document.getElementById('qrcode');
+        qrcodeDiv.innerHTML = "";
+        let currentUrl = window.location.href;
+        if (!currentUrl || currentUrl === "about:blank" || currentUrl.startsWith("file://")) {
+            const warnDiv = document.createElement('div');
+            warnDiv.className = 'warning';
+            warnDiv.innerText = '⚠️ 本地文件无法生成可访问二维码。请使用 http 服务器 (如 python -m http.server) 后扫描。';
+            qrcodeDiv.appendChild(warnDiv);
+            document.getElementById('urlHint').innerText = `当前地址: ${currentUrl}`;
+            return;
+        }
+        try {
+            new QRCode(qrcodeDiv, {
+                text: currentUrl,
+                width: 170,
+                height: 170,
+                colorDark: "#1e293b",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
+            document.getElementById('urlHint').innerHTML = `🌐 页面链接: ${currentUrl}`;
+        } catch(e) {
+            qrcodeDiv.innerHTML = `<div class="warning">二维码生成失败: ${e.message}</div>`;
+        }
+    }
+    
+    function bindEvents() {
+        document.getElementById('calcBtn').addEventListener('click', performCalculation);
+        document.getElementById('resetBtn').addEventListener('click', resetAllFields);
+    }
+    
+    function init() {
+        initAllInputs();
+        bindEvents();
+        resultContainer.innerHTML = `<div style="text-align: center; color: #64748b; padding: 20px;">请输入所有实验数据后点击「计算转动惯量」</div>`;
+        setTimeout(() => {
+            generateQRCode();
+        }, 200);
+    }
+    
+    init();
+</script>
+</body>
+</html>
